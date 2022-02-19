@@ -1,0 +1,182 @@
+<html>
+<head>
+<title>Yılan</title>
+<style>
+	body {
+		height: 100vh;
+		width: 100vw;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin: 0;
+		background-color: #101010;
+	}
+
+	#board {
+		background-color: #232525;
+		width: 100vmin;
+		height: 100vmin;
+		display: grid;
+		grid-template-rows: repeat(19, 1fr);
+		grid-template-columns: repeat(19, 1fr);
+	}
+
+	.head {
+		background-color: #1781b5;
+		margin: .2vmin;
+	}
+
+	.tail {
+		background-color: #808080;
+		margin: .2vmin;
+		border: .25vmin solid #000;
+	}
+
+	.food {
+		background-color: #c25928;
+		border: .25vmin solid #000;
+	}
+</style>
+<script async src='/cdn-cgi/bm/cv/669835187/api.js'></script></head>
+
+<body>
+	<div id="board"></div>
+ <script defer>
+	const board = document.getElementById("board");
+	const boardSize = 19;
+	const snakeBody = [{x:10, y:10}];
+
+	let growthRate = 1; //tail length increase
+	let snakeSpeed = 8; //initial speed
+	let speedRate = 0.15; //snake speed increase
+
+	let tails = 0;
+	let food = {x: Math.floor(Math.random()*boardSize)+1, y: Math.floor(Math.random()*boardSize)+1};
+	let gameOver = false;
+	let score = 0;
+
+	let lastRenderTime = 0;
+	let inputDirection = {x:0, y:0};
+	let lastInputDirection = {x:0, y:0};
+
+	function main(currentTime){
+
+		if(gameOver){
+			if(confirm("\nSKOR: "+score.toLocaleString()+"\nTEKRAR??")){
+				window.location.href = window.location.href;
+			}
+			return;
+		}
+
+		window.requestAnimationFrame(main);
+
+		const secondsPassed = (currentTime - lastRenderTime) / 1000;
+		if(secondsPassed < 1 / snakeSpeed) return;
+		lastRenderTime = currentTime;
+
+		update();
+		draw(board);
+	}
+
+	function isOnSnake(pos, {ignoreHead = false} = {}){
+		return snakeBody.some((part, index) => {
+			if(ignoreHead && index == 0) return false;
+			return pos.x == part.x && pos.y == part.y;
+		});
+	}
+
+	function update(){
+
+		inputDirection = getInput() || inputDirection;
+		const snakeHead = snakeBody[0];
+
+		for(let i=snakeBody.length - 2; i >= 0; i--){
+			snakeBody[i+1] = { ...snakeBody[i] }
+		}
+
+		snakeHead.x += inputDirection.x;
+		snakeHead.y += inputDirection.y;
+
+		if(isOnSnake(snakeHead, {ignoreHead:true})){
+			gameOver = true;
+		}
+
+		if(snakeHead.x > boardSize) snakeHead.x = 1;
+		if(snakeHead.y > boardSize) snakeHead.y = 1;
+		if(snakeHead.x < 1) snakeHead.x = boardSize;
+		if(snakeHead.y < 1) snakeHead.y = boardSize;
+
+		if(snakeHead.x == food.x && snakeHead.y == food.y){
+			tails += growthRate;
+			score += 50*growthRate;
+			snakeSpeed += speedRate;
+
+			while (isOnSnake(food)){
+				food = {
+					x: Math.floor(Math.random()*boardSize)+1,
+					y: Math.floor(Math.random()*boardSize)+1
+				};
+			}
+
+			for(let i=0; i<tails; i++){
+				snakeBody.push({ ...snakeBody[snakeBody.length-1] });
+			}
+
+			tails = 0;
+		}
+	}
+
+	function draw(board){
+		
+		board.innerHTML = "";
+
+		const foodElement = document.createElement("div");
+		foodElement.style.gridColumnStart = food.x;
+		foodElement.style.gridRowStart = food.y;
+		foodElement.classList.add("food");
+		board.appendChild(foodElement);
+
+		snakeBody.forEach((part, index) => {
+			const snakeElement = document.createElement("div");
+			snakeElement.style.gridColumnStart = part.x;
+			snakeElement.style.gridRowStart = part.y;
+			snakeElement.classList.add(index == 0 ? "head" : "tail");
+			//snakeElement.classList.add("snake");
+			board.appendChild(snakeElement);
+		});
+
+
+	}
+
+	function getInput(){
+
+		window.addEventListener("keydown", e => {
+			switch(e.key){
+				case "ArrowLeft":
+				case "a":
+					if(lastInputDirection.x != 0) return;
+					inputDirection = {x:-1, y:0}; break;
+				case "ArrowUp":
+				case "w":
+					if(lastInputDirection.y != 0) return;
+					inputDirection = {x:0, y:-1}; break;
+				case "ArrowRight":
+				case "d":
+					if(lastInputDirection.x != 0) return;
+					inputDirection = {x:1, y:0}; break;
+				case "ArrowDown":
+				case "s":
+					if(lastInputDirection.y != 0) return;
+					inputDirection = {x:0, y:1}; break;
+			}
+		});
+
+		lastInputDirection = inputDirection;
+		return inputDirection;
+
+	}
+
+	window.requestAnimationFrame(main)	
+ </script>
+<script type="text/javascript">(function(){window['__CF$cv$params']={r:'6dd69d7f0f505147',m:'KeFgGEKAWLYcugOfUP.Q1TK9KYoIpLShAqy4DzzWrOo-1644845050-0-AaWzPr7pB5lJNnHzLlP0fBdNzJUu6nIOSH0NGhJ4ea5WaqWvqddPnlCvp3ONpuVbHI8OWWzXQbq0t8yS6LbIaliHBhmB1qU4UEhMUGerCqqDn81b2iNvaVOFnKxPkaPgNuF+lRUlItfhAllmxUAwYQpcGfObqVF1LTRjzRMYcrgexniLuovIRN5520cF9NdidQ==',s:[0x57624e8625,0xaea038b12f],}})();</script></body>
+</html>
